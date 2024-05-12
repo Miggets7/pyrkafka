@@ -1,0 +1,27 @@
+[build-system]
+requires = ["maturin>=1.2,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "pyrkafka"
+version = "0.1.0"
+description = "Python bindings for rdfkafka Rust library"
+authors = [{ name = "Michael Rademaker", email = "michael@appbriek.com" }]
+requires-python = ">=3.8"
+readme = "README.md"
+license = {text = "MIT License"}
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+[project.urls]
+Homepage = "https://github.com/Miggets7/pyrkafka"
+Documentation = "https://github.com/Miggets7/pyrkafka"
+Repository = "https://github.com/Miggets7/pyrkafka"
+Issues = "https://github.com/Miggets7/pyrkafka/issues"
+Changelog = "https://github.com/Miggets7/pyrkafka"
+
+
+[tool.maturin]
+features = ["pyo3/extension-module", "pyo3/abi3-py38"]
