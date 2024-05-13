@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "pyrkafka"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python bindings for rdfkafka Rust library"
 authors = [{ name = "Michael Rademaker", email = "michael@appbriek.com" }]
 requires-python = ">=3.8"
