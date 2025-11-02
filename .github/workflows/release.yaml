@@ -36,13 +36,12 @@ jobs:
           sccache: 'true'
           manylinux: auto
           before-script-linux: |
-            # Install CMake and build dependencies for rdkafka
+            # Install minimal build dependencies for rdkafka
             if command -v yum &> /dev/null; then
-              yum install -y cmake3 perl-core openssl-devel cyrus-sasl-devel zlib-devel
-              ln -sf /usr/bin/cmake3 /usr/bin/cmake
+              yum install -y perl-core zlib-devel
             elif command -v apt-get &> /dev/null; then
               apt-get update
-              apt-get install -y cmake libssl-dev libsasl2-dev zlib1g-dev
+              apt-get install -y zlib1g-dev
             fi
       
       - name: Upload wheels
