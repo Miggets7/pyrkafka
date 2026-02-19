@@ -33,7 +33,7 @@ Requires a Rust toolchain and `maturin` (`pip install maturin`). The build also 
 
 ## Key Dependencies
 
-- **PyO3 0.23** with ABI3 stable API (Python 3.13+), using the Bound API
+- **PyO3 0.24** with ABI3 stable API (Python 3.13+), using the Bound API
 - **rdkafka 0.36** with features: `cmake-build`, `ssl-vendored`, `gssapi-vendored`, `libz-static`, `zstd`
 - **Maturin** as the Python build backend
 

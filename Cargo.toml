@@ -8,5 +8,5 @@ name = "pyrkafka"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = "0.23"
+pyo3 = "0.24"
 rdkafka = { version = "0.36", features = ["cmake-build", "ssl-vendored", "gssapi-vendored", "libz-static", "zstd"] }
