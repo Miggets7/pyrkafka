@@ -30,10 +30,9 @@ jobs:
           target: ${{ matrix.target }}
           args: --release --out dist
           sccache: 'true'
-          manylinux: auto
-          # Install cmake inside the manylinux container (not on the host).
-          # Tries yum (manylinux2014/CentOS), dnf (manylinux_2_28/AlmaLinux), then pip as fallback.
-          before-script-linux: yum install -y cmake perl-IPC-Cmd clang-devel || dnf install -y cmake perl-IPC-Cmd clang-devel || pip install cmake
+          manylinux: 2_28
+          # Install build dependencies inside the manylinux_2_28 (AlmaLinux 8) container.
+          before-script-linux: dnf install -y cmake perl-IPC-Cmd clang-devel
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
