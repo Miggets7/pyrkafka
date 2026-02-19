@@ -31,9 +31,9 @@ jobs:
           args: --release --out dist
           sccache: 'true'
           manylinux: auto
-          # Install cmake + perl inside the manylinux container (not on the host).
-          # cmake is needed by rdkafka-sys, perl by openssl-sys vendored build.
-          before-script-linux: yum install -y cmake perl
+          # Install cmake inside the manylinux container (not on the host).
+          # Tries yum (manylinux2014/CentOS), dnf (manylinux_2_28/AlmaLinux), then pip as fallback.
+          before-script-linux: yum install -y cmake || dnf install -y cmake || pip install cmake
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4

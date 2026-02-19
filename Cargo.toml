@@ -9,4 +9,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = "0.24"
-rdkafka = { version = "0.36", features = ["cmake-build", "ssl-vendored", "gssapi-vendored", "libz-static", "zstd"] }
+rdkafka = { version = "0.36", features = ["cmake-build", "ssl-vendored", "libz-static", "zstd"] }
