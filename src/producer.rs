@@ -1,7 +1,9 @@
+use std::collections::HashMap;
 use std::time::Duration;
 
 use pyo3::prelude::*;
-use rdkafka::{producer::{BaseProducer, BaseRecord, Producer}, ClientConfig};
+use rdkafka::producer::{BaseProducer, BaseRecord, Producer};
+use rdkafka::ClientConfig;
 
 #[pyclass]
 pub struct PyrKafkaProducer {
@@ -11,22 +13,37 @@ pub struct PyrKafkaProducer {
 #[pymethods]
 impl PyrKafkaProducer {
     #[new]
-    fn new(broker: &str) -> PyResult<Self> {
-        let producer: BaseProducer = ClientConfig::new()
-            .set("bootstrap.servers", broker)
-            .create()
-            .map_err(|e| {
-                PyErr::new::<pyo3::exceptions::PyException, _>(format!(
-                    "Failed to create producer: {}",
-                    e
-                ))
-            })?;
+    #[pyo3(signature = (broker, config=None))]
+    fn new(broker: &str, config: Option<HashMap<String, String>>) -> PyResult<Self> {
+        let mut client_config = ClientConfig::new();
+        client_config.set("bootstrap.servers", broker);
+
+        if let Some(config) = config {
+            for (key, value) in config {
+                client_config.set(&key, &value);
+            }
+        }
+
+        let producer: BaseProducer = client_config.create().map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyConnectionError, _>(format!(
+                "Failed to create producer: {}",
+                e
+            ))
+        })?;
 
         Ok(PyrKafkaProducer { producer })
     }
 
     fn produce(&self, topic: &str, message: &[u8]) -> PyResult<()> {
-        self.produce_with_key(topic, message, "key")
+        self.producer
+            .send(BaseRecord::<str, [u8]>::to(topic).payload(message))
+            .map_err(|e| {
+                PyErr::new::<pyo3::exceptions::PyException, _>(format!(
+                    "Failed to send message: {:?}",
+                    e
+                ))
+            })?;
+        Ok(())
     }
 
     fn produce_with_key(&self, topic: &str, message: &[u8], key: &str) -> PyResult<()> {
@@ -38,7 +55,6 @@ impl PyrKafkaProducer {
                     e
                 ))
             })?;
-
         Ok(())
     }
 

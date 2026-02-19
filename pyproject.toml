@@ -4,10 +4,10 @@ build-backend = "maturin"
 
 [project]
 name = "pyrkafka"
-version = "0.1.1"
-description = "Python bindings for rdfkafka Rust library"
+version = "0.2.0"
+description = "Python bindings for rdkafka Rust library"
 authors = [{ name = "Michael Rademaker", email = "michael@appbriek.com" }]
-requires-python = ">=3.8"
+requires-python = ">=3.13"
 readme = "README.md"
 license = {text = "MIT License"}
 classifiers = [
@@ -24,4 +24,4 @@ Changelog = "https://github.com/Miggets7/pyrkafka"
 
 
 [tool.maturin]
-features = ["pyo3/extension-module", "pyo3/abi3-py38"]
+features = ["pyo3/extension-module", "pyo3/abi3-py313"]

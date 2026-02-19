@@ -1,7 +1,11 @@
-use std::{sync::{Arc, Mutex}, time::Duration};
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use pyo3::prelude::*;
-use rdkafka::{consumer::{BaseConsumer, Consumer}, ClientConfig, Message};
+use pyo3::types::PyBytes;
+use rdkafka::consumer::{BaseConsumer, Consumer};
+use rdkafka::{ClientConfig, Message};
 
 #[derive(PartialEq)]
 enum PyrKafkaConsumerState {
@@ -18,19 +22,32 @@ pub struct PyrKafkaConsumer {
 #[pymethods]
 impl PyrKafkaConsumer {
     #[new]
-    fn new(broker: &str, topic: &str, group_id: &str) -> PyResult<Self> {
-        let consumer: BaseConsumer = ClientConfig::new()
+    #[pyo3(signature = (broker, topic, group_id, config=None))]
+    fn new(
+        broker: &str,
+        topic: &str,
+        group_id: &str,
+        config: Option<HashMap<String, String>>,
+    ) -> PyResult<Self> {
+        let mut client_config = ClientConfig::new();
+        client_config
             .set("group.id", group_id)
             .set("bootstrap.servers", broker)
             .set("auto.offset.reset", "earliest")
-            .set("allow.auto.create.topics", "true")
-            .create()
-            .map_err(|e| {
-                PyErr::new::<pyo3::exceptions::PyException, _>(format!(
-                    "Failed to create consumer: {}",
-                    e
-                ))
-            })?;
+            .set("allow.auto.create.topics", "true");
+
+        if let Some(config) = config {
+            for (key, value) in config {
+                client_config.set(&key, &value);
+            }
+        }
+
+        let consumer: BaseConsumer = client_config.create().map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyConnectionError, _>(format!(
+                "Failed to create consumer: {}",
+                e
+            ))
+        })?;
 
         consumer.subscribe(&[topic]).map_err(|e| {
             PyErr::new::<pyo3::exceptions::PyException, _>(format!(
@@ -39,12 +56,14 @@ impl PyrKafkaConsumer {
             ))
         })?;
 
-        consumer.fetch_metadata(Some(topic), Duration::from_secs(1)).map_err(|e| {
-            PyErr::new::<pyo3::exceptions::PyException, _>(format!(
-                "Failed to fetch metadata for topic: {}",
-                e
-            ))
-        })?;
+        consumer
+            .fetch_metadata(Some(topic), Duration::from_secs(1))
+            .map_err(|e| {
+                PyErr::new::<pyo3::exceptions::PyConnectionError, _>(format!(
+                    "Failed to fetch metadata for topic: {}",
+                    e
+                ))
+            })?;
 
         Ok(PyrKafkaConsumer {
             consumer,
@@ -53,7 +72,9 @@ impl PyrKafkaConsumer {
     }
 
     fn stop(&self) -> PyResult<()> {
-        let mut state = self.state.lock().unwrap();
+        let mut state = self.state.lock().map_err(|_| {
+            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Consumer state lock poisoned")
+        })?;
         *state = PyrKafkaConsumerState::Stopped;
         Ok(())
     }
@@ -62,34 +83,41 @@ impl PyrKafkaConsumer {
         slf
     }
 
-    fn __next__(&mut self, py: Python) -> PyResult<PyObject> {
-        let state = self.state.clone();
+    fn __next__(&mut self, py: Python<'_>) -> PyResult<Option<PyObject>> {
         loop {
-            let run = state.lock().unwrap();
-            if *run == PyrKafkaConsumerState::Stopped {
-                // Signal to Python to stop the iteration
-                break Err(PyErr::new::<pyo3::exceptions::PyStopAsyncIteration, _>(
-                    "No more messages",
-                ));
-            }
-            drop(run); // Release the lock before polling
-
-            match self.consumer.poll(Duration::from_secs(1)) {
-                None => continue,
-                Some(Err(e)) => {
-                    return Err(PyErr::new::<pyo3::exceptions::PyException, _>(format!(
-                        "Error polling: {}",
-                        e
-                    )))
+            {
+                let state = self.state.lock().map_err(|_| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+                        "Consumer state lock poisoned",
+                    )
+                })?;
+                if *state == PyrKafkaConsumerState::Stopped {
+                    return Ok(None);
                 }
-                Some(Ok(m)) => {
-                    if let Some(payload) = m.payload() {
-                        return Ok(payload.into_py(py).to_object(py));
-                    } else {
-                        return Err(PyErr::new::<pyo3::exceptions::PyException, _>(
-                            "Received message with empty payload",
-                        ));
-                    }
+            }
+
+            // Release the GIL during the blocking Kafka poll so other Python
+            // threads can run while we wait for messages.
+            let consumer = &self.consumer;
+            let poll_result = py.allow_threads(move || {
+                consumer.poll(Duration::from_secs(1)).map(|res| {
+                    res.map(|m| m.payload().map(|p| p.to_vec()))
+                        .map_err(|e| format!("{e}"))
+                })
+            });
+
+            match poll_result {
+                None => continue,
+                Some(Ok(Some(payload))) => {
+                    return Ok(Some(PyBytes::new(py, &payload).into_any().unbind()));
+                }
+                Some(Ok(None)) => {
+                    return Err(PyErr::new::<pyo3::exceptions::PyException, _>(
+                        "Received message with empty payload",
+                    ));
+                }
+                Some(Err(e)) => {
+                    return Err(PyErr::new::<pyo3::exceptions::PyException, _>(e));
                 }
             }
         }
