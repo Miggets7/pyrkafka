@@ -33,7 +33,7 @@ jobs:
           manylinux: auto
           # Install cmake inside the manylinux container (not on the host).
           # Tries yum (manylinux2014/CentOS), dnf (manylinux_2_28/AlmaLinux), then pip as fallback.
-          before-script-linux: yum install -y cmake perl-IPC-Cmd || dnf install -y cmake perl-IPC-Cmd || pip install cmake
+          before-script-linux: yum install -y cmake perl-IPC-Cmd clang-devel || dnf install -y cmake perl-IPC-Cmd clang-devel || pip install cmake
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
