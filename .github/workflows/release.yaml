@@ -32,10 +32,14 @@ jobs:
           sccache: 'true'
           manylinux: 2_28
           # Install build dependencies inside the container.
-          # x86_64 uses manylinux_2_28 (AlmaLinux/dnf), aarch64 cross uses Ubuntu (apt-get).
-          before-script-linux: >-
-            dnf install -y cmake perl-IPC-Cmd clang-devel ||
-            (apt-get update && apt-get install -y cmake libclang-dev)
+          # x86_64 runs in manylinux_2_28 (AlmaLinux 8 / yum).
+          # aarch64 cross-compiles in rust-cross/manylinux_2_28-cross (Ubuntu / apt-get).
+          before-script-linux: |
+            if command -v yum &> /dev/null; then
+                yum install -y perl-core cmake clang-devel
+            else
+                apt-get update && apt-get install -y perl cmake libclang-dev
+            fi
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
