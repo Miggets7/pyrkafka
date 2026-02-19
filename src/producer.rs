@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use pyo3::prelude::*;
-use rdkafka::producer::{BaseProducer, BaseRecord, Producer};
 use rdkafka::ClientConfig;
+use rdkafka::producer::{BaseProducer, BaseRecord, Producer};
 
 #[pyclass]
 pub struct PyrKafkaProducer {

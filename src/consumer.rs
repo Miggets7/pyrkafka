@@ -3,7 +3,6 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use pyo3::prelude::*;
-use pyo3::types::PyBytes;
 use rdkafka::consumer::{BaseConsumer, Consumer};
 use rdkafka::{ClientConfig, Message};
 
@@ -83,7 +82,7 @@ impl PyrKafkaConsumer {
         slf
     }
 
-    fn __next__(&mut self, py: Python<'_>) -> PyResult<Option<PyObject>> {
+    fn __next__(&mut self, py: Python<'_>) -> PyResult<Option<Vec<u8>>> {
         loop {
             {
                 let state = self.state.lock().map_err(|_| {
@@ -99,7 +98,7 @@ impl PyrKafkaConsumer {
             // Release the GIL during the blocking Kafka poll so other Python
             // threads can run while we wait for messages.
             let consumer = &self.consumer;
-            let poll_result = py.allow_threads(move || {
+            let poll_result = py.detach(move || {
                 consumer.poll(Duration::from_secs(1)).map(|res| {
                     res.map(|m| m.payload().map(|p| p.to_vec()))
                         .map_err(|e| format!("{e}"))
@@ -108,9 +107,7 @@ impl PyrKafkaConsumer {
 
             match poll_result {
                 None => continue,
-                Some(Ok(Some(payload))) => {
-                    return Ok(Some(PyBytes::new(py, &payload).into_any().unbind()));
-                }
+                Some(Ok(Some(payload))) => return Ok(Some(payload)),
                 Some(Ok(None)) => {
                     return Err(PyErr::new::<pyo3::exceptions::PyException, _>(
                         "Received message with empty payload",

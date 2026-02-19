@@ -1,12 +1,12 @@
 [package]
 name = "pyrkafka"
 version = "0.2.0"
-edition = "2021"
+edition = "2024"
 
 [lib]
 name = "pyrkafka"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = "0.24"
-rdkafka = { version = "0.36", features = ["cmake-build", "ssl-vendored", "libz-static", "zstd"] }
+pyo3 = "0.28"
+rdkafka = { version = "0.39", features = ["cmake-build", "ssl-vendored", "libz-static", "zstd"] }
