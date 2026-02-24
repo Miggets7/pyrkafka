@@ -36,9 +36,9 @@ jobs:
           # aarch64 cross-compiles in rust-cross/manylinux_2_28-cross (Ubuntu / apt-get).
           before-script-linux: |
             if command -v yum &> /dev/null; then
-                yum install -y perl-core cmake clang-devel
+                yum install -y perl-core cmake clang-devel libcurl-devel
             else
-                apt-get update && apt-get install -y perl cmake libclang-dev
+                apt-get update && apt-get install -y perl cmake libclang-dev libcurl4-openssl-dev
             fi
 
       - name: Upload wheels
