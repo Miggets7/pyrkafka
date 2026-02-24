@@ -35,10 +35,17 @@ jobs:
           # x86_64 runs in manylinux_2_28 (AlmaLinux 8 / yum).
           # aarch64 cross-compiles in rust-cross/manylinux_2_28-cross (Ubuntu / apt-get).
           before-script-linux: |
+            # Workaround for librdkafka 2.12.1 bug (confluentinc/librdkafka#5204):
+            # rdkafka_conf.c:59 uses #ifdef instead of #if for WITH_OAUTHBEARER_OIDC,
+            # causing curl/curl.h to be included even with -DWITH_CURL=0.
+            # No curl symbols are actually used, so a stub header suffices.
+            mkdir -p /tmp/curl-stub/curl
+            touch /tmp/curl-stub/curl/curl.h
+            export C_INCLUDE_PATH="/tmp/curl-stub${C_INCLUDE_PATH:+:$C_INCLUDE_PATH}"
             if command -v yum &> /dev/null; then
-                yum install -y perl-core cmake clang-devel libcurl-devel
+                yum install -y perl-core cmake clang-devel
             else
-                apt-get update && apt-get install -y perl cmake libclang-dev libcurl4-openssl-dev
+                apt-get update && apt-get install -y perl cmake libclang-dev
             fi
 
       - name: Upload wheels
