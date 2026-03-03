@@ -1,11 +1,18 @@
-# pyrkafka: Python Wrapper for rdkafka (Rust)
+# pyrkafka: Fast Python Kafka Client Powered by Rust
 
 [![PyPI version](https://badge.fury.io/py/pyrkafka.svg)](https://pypi.org/project/pyrkafka/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-## Python Library for Apache Kafka
+`pyrkafka` is a fast, lightweight Python client for [Apache Kafka](https://kafka.apache.org/), built on top of [librdkafka](https://github.com/confluentinc/librdkafka) via the Rust [rdkafka](https://docs.rs/rdkafka) crate. It provides a simple, Pythonic API for producing and consuming Kafka messages with native Rust performance through [PyO3](https://pyo3.rs).
 
-`pyrkafka` is a Python wrapper around the `rdkafka` Rust library. It provides a high-level Pythonic API for producing and consuming Kafka messages, leveraging the performance and safety of Rust via [PyO3](https://pyo3.rs).
+## Features
+
+- **Rust-powered performance** — wraps librdkafka through Rust, avoiding the overhead of pure-Python implementations
+- **GIL release during polling** — consumer polling releases the Python GIL, allowing other threads to run while waiting for messages
+- **Simple Pythonic API** — producer and consumer with familiar Python patterns (iterator protocol for consuming)
+- **Full librdkafka configuration** — pass any [librdkafka config option](https://github.com/confluentinc/librdkafka/blob/master/CONFIGURATION.md) via a dict
+- **SSL and compression built-in** — compiled with SSL (vendored OpenSSL) and zstd compression support
+- **Cross-platform wheels** — pre-built for Linux (x86_64, aarch64), macOS (x86_64, Apple Silicon), and Windows
 
 ## Installation
 
@@ -13,7 +20,7 @@
 pip install pyrkafka
 ```
 
-Requires Python 3.13+.
+Requires Python 3.13+. Pre-built wheels are available for all major platforms — no Rust toolchain needed for installation.
 
 ## Getting Started
 
@@ -60,3 +67,7 @@ consumer = PyrKafkaConsumer("localhost:9092", "my_topic", "my_group", config={
     "enable.auto.commit": "false",
 })
 ```
+
+## License
+
+MIT

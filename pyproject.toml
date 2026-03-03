@@ -5,15 +5,34 @@ build-backend = "maturin"
 [project]
 name = "pyrkafka"
 version = "0.2.0"
-description = "Python bindings for rdkafka Rust library"
+description = "Fast Python Kafka client powered by Rust and librdkafka — producer and consumer with native performance"
 authors = [{ name = "Michael Rademaker", email = "michael@appbriek.com" }]
 requires-python = ">=3.13"
 readme = "README.md"
 license = {text = "MIT License"}
+keywords = [
+    "kafka",
+    "rdkafka",
+    "rust",
+    "producer",
+    "consumer",
+    "messaging",
+    "streaming",
+    "pyo3",
+    "librdkafka",
+    "event-streaming",
+]
 classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Networking",
 ]
 [project.urls]
 Homepage = "https://github.com/Miggets7/pyrkafka"
