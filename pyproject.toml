@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "pyrkafka"
-version = "0.2.0"
+version = "0.2.1"
 description = "Fast Python Kafka client powered by Rust and librdkafka — producer and consumer with native performance"
 authors = [{ name = "Michael Rademaker", email = "michael@appbriek.com" }]
 requires-python = ">=3.13"
