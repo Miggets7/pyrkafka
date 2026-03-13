@@ -9,7 +9,7 @@
 
 - **Rust-powered performance** — wraps librdkafka through Rust, avoiding the overhead of pure-Python implementations
 - **GIL release during polling** — consumer polling releases the Python GIL, allowing other threads to run while waiting for messages
-- **Simple Pythonic API** — producer and consumer with familiar Python patterns (iterator protocol for consuming)
+- **Simple Pythonic API** — producer and consumer with familiar Python patterns (`for` and `async for` for consuming)
 - **Full librdkafka configuration** — pass any [librdkafka config option](https://github.com/confluentinc/librdkafka/blob/master/CONFIGURATION.md) via a dict
 - **SSL and compression built-in** — compiled with SSL (vendored OpenSSL) and zstd compression support
 - **Cross-platform wheels** — pre-built for Linux (x86_64, aarch64), macOS (x86_64, Apple Silicon), and Windows
@@ -50,6 +50,22 @@ consumer = PyrKafkaConsumer("localhost:9092", "my_topic", "my_group")
 
 for message in consumer:
     print(message.decode())
+```
+
+### Async Consuming
+
+The consumer supports `async for` for use in asyncio applications. The blocking Kafka poll is automatically offloaded to a thread so the event loop stays responsive:
+
+```python
+import asyncio
+from pyrkafka import PyrKafkaConsumer
+
+async def main():
+    consumer = PyrKafkaConsumer("localhost:9092", "my_topic", "my_group")
+    async for message in consumer:
+        print(message.decode())
+
+asyncio.run(main())
 ```
 
 ### Custom Configuration

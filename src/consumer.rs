@@ -119,4 +119,50 @@ impl PyrKafkaConsumer {
             }
         }
     }
+
+    fn __aiter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    fn __anext__<'py>(slf: &Bound<'py, Self>, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let asyncio = py.import("asyncio")?;
+        let poll_method = slf.getattr("_poll_next")?;
+        asyncio.call_method1("to_thread", (poll_method,))
+    }
+
+    fn _poll_next(&self, py: Python<'_>) -> PyResult<Vec<u8>> {
+        loop {
+            {
+                let state = self.state.lock().map_err(|_| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+                        "Consumer state lock poisoned",
+                    )
+                })?;
+                if *state == PyrKafkaConsumerState::Stopped {
+                    return Err(PyErr::new::<pyo3::exceptions::PyStopAsyncIteration, _>(""));
+                }
+            }
+
+            let consumer = &self.consumer;
+            let poll_result = py.detach(move || {
+                consumer.poll(Duration::from_secs(1)).map(|res| {
+                    res.map(|m| m.payload().map(|p| p.to_vec()))
+                        .map_err(|e| format!("{e}"))
+                })
+            });
+
+            match poll_result {
+                None => continue,
+                Some(Ok(Some(payload))) => return Ok(payload),
+                Some(Ok(None)) => {
+                    return Err(PyErr::new::<pyo3::exceptions::PyException, _>(
+                        "Received message with empty payload",
+                    ));
+                }
+                Some(Err(e)) => {
+                    return Err(PyErr::new::<pyo3::exceptions::PyException, _>(e));
+                }
+            }
+        }
+    }
 }
