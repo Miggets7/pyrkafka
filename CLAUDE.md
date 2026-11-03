@@ -43,7 +43,7 @@ Both accept an optional `config` dict for [librdkafka configuration](https://git
 ## Key Dependencies
 
 - **Rust edition 2024**, `cdylib` crate type
-- **PyO3 0.28** with ABI3 stable API (Python 3.13+), using the Bound API and `IntoPyObject`
+- **PyO3 0.29** with ABI3 stable API (Python 3.13+), using the Bound API and `IntoPyObject`
 - **rdkafka 0.39** with features: `cmake-build`, `ssl-vendored`, `libz-static`, `zstd`
 - **Maturin** as the Python build backend
 
